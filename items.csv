@@ -1,0 +1,8 @@
+itemname,category,use,points
+fists,misc,damage,0
+dagger,weapon,damage,10
+sword,weapon,damage,25
+apple,consumable,heal,15
+medicine,consumable,heal,40
+key,token,progress,20
+katana,weapon,damage,30
