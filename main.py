@@ -9,7 +9,13 @@ import csv
 from delayprint import delay_print
 
 # set directory to current directory
-os.chdir('C:/Users/dylan/Documents/Code Projects/VSCode Projects/CommandPromptGame')
+os.chdir('C:/Users/dylan/Documents/Code Projects/VSCode Projects/CommandPromptGame/Command-Prompt-Game')
+
+savedirectory = "C:/Users/dylan/Documents/Code Projects/VSCode Projects/CommandPromptGame/Command-Prompt-Game/savegame/"
+savedfiles = os.listdir(savedirectory)
+savedfiles_noext = [x.split('.')[0] for x in savedfiles]
+
+invsavedirectory = "C:/Users/dylan/Documents/Code Projects/VSCode Projects/CommandPromptGame/Command-Prompt-Game/invsave/"
 
 # create dictionary of all items to be used in the game
 reader = csv.DictReader(open("items.csv", encoding="UTF-8"))
@@ -72,8 +78,10 @@ def walk(mainplayer):
         fightretreat = input("(f)ight or (r)etreat? ")
         if fightretreat == "f":
             fight(mainplayer)
-        else:
+        elif fightretreat == "r":
             retreat()
+        else:
+            delay_print("Input is not an option.")
 
 def fight(mainplayer):
     """fight mechanic function"""
@@ -108,12 +116,14 @@ def progression(mainplayer):
         print("\n------------------------------------------\n")
         delay_print("\nYou leveled up!")
         delay_print(f"\nLevel {mainplayer.level-1} -----> Level {mainplayer.level}")
-        delay_print(f"""\nexperience required to reach Level {mainplayer.level + 1}:
-                    {int(25 * mainplayer.level**1.5)}""")
+        delay_print(f"""\nXP required to reach Level {mainplayer.level + 1}: {int(25 * mainplayer.level**1.5)}""")
         print("\n------------------------------------------\n")
 
-def quitgame():
+def quitgame(mainplayer):
     """quit game function"""
+    save = input("Would you like to save the game? (y/n) ")
+    if save == "y":
+        savegame(mainplayer)
     yesno = input("Are you sure you want to quit the game? (y/n) ")
     if yesno == "y":
         sys.exit()
@@ -177,8 +187,7 @@ def heal(mainplayer):
                 index_item = invitems.index(inputitem)
                 mainplayer.health += float(allitems[inputitem]["points"])
                 mainplayer.inventory.pop(index_item)
-                delay_print(f"""\nYou consumed 1 {inputitem} to increase your health
-                            by {float(allitems[inputitem]['points'])} to {mainplayer.health}.\n""")
+                delay_print(f"""\nYou consumed 1 {inputitem} to increase your health by {float(allitems[inputitem]['points'])} to {mainplayer.health}.\n""")
             else:
                 delay_print(f"\nHealth cannot be greater than {HEALTH}.")
         else:
@@ -189,12 +198,26 @@ def heal(mainplayer):
         heal(mainplayer)
     print("----------------------------------\n")
 
+def rules():
+    """rules menu function"""
+    print("----------------------------RULES----------------------------\n")
+    print("""Use the keyboard to interact with the game.
+          Gain experience and levels by safely walking forward or by
+          defeating enemies.
+          There is a chance a fallen enemy will drop an item for you.
+          Some weapons deal more damage than others--you'll find out once
+          you pick it up.
+          Keep an eye on your health, dropping to 0 will end the game.
+          Some consumable items can be used to gain health or experience.\n""")
+    print("-------------------------------------------------------------\n")
+
 def options(mainplayer):
     """options menu function"""
     print("Options:\n")
     print("(i)nventory")
     print("(s)tats")
     print("(h)eal")
+    print("(r)ules")
     print("(q)uit\n")
     playerchoice = input("-------> ")
     print("\n")
@@ -206,7 +229,9 @@ def options(mainplayer):
         case "h":
             heal(mainplayer)
         case "q":
-            quitgame()
+            quitgame(mainplayer)
+        case "r":
+            rules()
         case _:
             print("Not an option, try again.\n")
 
@@ -235,9 +260,13 @@ def droppeditem(mainplayer):
 
 def loadgame():
     """load game function"""
+    print("\nCurrent game saves: \n")
+    for file in savedfiles_noext:
+        print(file)
+    print("\n")
     delay_print("Type the saved game file name to continue your adventure: ")
     gamesave = input() + ".csv"
-    gamesave_reader = csv.DictReader(open(gamesave, encoding="UTF-8"))
+    gamesave_reader = csv.DictReader(open(savedirectory + gamesave, encoding="UTF-8"))
     gamesave_dict = {}
     for gamesave_row in gamesave_reader:
         gamesave_key = gamesave_row.pop('key')
@@ -253,15 +282,50 @@ def loadgame():
                             experience = gamesave_dict["savedvalues"]["experience"],
                             level = gamesave_dict["savedvalues"]["level"],
                             kills = gamesave_dict["savedvalues"]["kills"])
-    with open(gamesave_dict["savedvalues"]["inventory"] + ".csv", "r", encoding="UTF-8") as savedinv:
+    with open(invsavedirectory + gamesave_dict["savedvalues"]["inventory"] + ".csv", "r", encoding="UTF-8") as savedinv:
         savedinv = list(csv.reader(savedinv, delimiter=','))
         for invrow in savedinv:
             for saveditem in invrow:
                 mainplayer.inventory.append(saveditem)
     print("\n------------------------------------------\n")
-    delay_print(f"Welcome back to the Game, {mainplayer.name}!\n")
+    delay_print(f"Welcome back to the Game, {mainplayer.name.title()}!\n")
     displaystats(mainplayer)
     return mainplayer
+
+def savegame(mainplayer):
+    """save game function"""
+    print("\nCurrent game saves: \n")
+    for file in savedfiles_noext:
+        print(file)
+    print("\n")
+    savefile = input("Enter a name for your save game: ")
+    with open(savedirectory + savefile + ".csv", 'w',
+              newline='', encoding="UTF-8") as csvfile:
+        savewriter = csv.writer(csvfile, delimiter=',')
+        savewriter.writerow(["key",
+                            "name",
+                            "age",
+                            "health",
+                            "inventory",
+                            "weapon",
+                            "playerdamage",
+                            "experience",
+                            "level",
+                            "kills"])
+        savewriter.writerow(["savedvalues",
+                            mainplayer.name,
+                            mainplayer.age,
+                            mainplayer.health,
+                            "inv_" + savefile,
+                            mainplayer.weapon,
+                            mainplayer.playerdamage,
+                            mainplayer.experience,
+                            mainplayer.level,
+                            mainplayer.kills])
+    with open(invsavedirectory + "inv_" + savefile + ".csv", "w",
+              newline='', encoding="UTF-8") as csvfile:
+        invsavewriter = csv.writer(csvfile, delimiter=',')
+        invsavewriter.writerow(mainplayer.inventory)
 
 def newgame():
     """new game function"""
@@ -321,18 +385,27 @@ class Player:
     def welcome(self):
         """welcome message"""
         print("\n------------------------------------------\n")
-        delay_print(f"Welcome to the game, {self.name.title()}!")
+        delay_print(f"Welcome to the Game, {self.name.title()}!")
         delay_print(f"Your character is {self.age} years old.\n")
         self.inventory.append("apple")
         self.inventory.append("key")
         self.inventory.append("apple")
         self.playerdamage = float(allitems[self.weapon]["points"]) + fightchance
-        displaystats(self)
-        displayinventory(self)
+        # time.sleep(2)
+        # rules()
+        # time.sleep(15)
+        # displaystats(self)
+        # time.sleep(10)
+        # displayinventory(self)
+        # time.sleep(2)
 
 def main():
     """main game function"""
-    playerchoice = input("(N)ew Game or (L)oad Game? ")
+    print("\n|           T H E     G A M E           |")
+    print("\n|                by DR                  |")
+    print("\n|    (N)ew Game    |    (L)oad Game     |")
+    print("\n|_______________________________________|\n")
+    playerchoice = input()
     print("\n")
     if playerchoice == "l" or playerchoice == "L":
         mainplayer = loadgame()
@@ -341,7 +414,7 @@ def main():
     while mainplayer.health > 0:
         mainplayer.playerdamage = float(allitems[mainplayer.weapon]["points"]) + fightchance
         print("-------------------------------------------------------------\n")
-        playerchoice = input("Choose your option: [ (w)alk, (f)ight, or (o)ptions] : ")
+        playerchoice = input("Choose your option: [ (w)alk, (f)ight, or (o)ptions ] : ")
         print("\n")
         match playerchoice:
             case "w":
