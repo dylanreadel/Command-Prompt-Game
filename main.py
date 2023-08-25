@@ -1,10 +1,11 @@
-"""import modules"""
+"""import standard libraries"""
 import os
-
 import random
 import time
 import sys
 import csv
+from collections import Counter
+
 from items import displayitem, random_item, items, consumableitems, weaponitems, tokenitems
 from rules import rules
 
@@ -72,14 +73,14 @@ def fight(mp):
         mp.experience += 10
         mp.kills += 1
         progression(mp)
-        print(f"Current Health: {mp.health}\n")
+        mp.display_health()
         droppeditem(mp, weaponitems)
         droppeditem(mp, consumableitems)
     else:
         mp.delay_print("The enemy beat you this time.\n")
         mp.delay_print("-10 Health\n")
         mp.health -=10
-        print(f"Current Health: {mp.health}\n")
+        mp.display_health()
 
 def retreat(mp):
     """retreat from fight function"""
@@ -112,8 +113,10 @@ def displayinventory(mp):
     """display inventory function"""
     print("-------------------------------------------------------------\n")
     print("INVENTORY MENU\n")
-    for item in mp.inventory:
-        displayitem(item)
+    counteditems = dict(Counter(mp.inventory))
+    for item, count in counteditems.items():
+        display = displayitem(item)
+        print(str(count) + "x " + display)
     print("\n-------------------------------------------------------------\n")
 
 def playerinventory(mp):
@@ -152,40 +155,44 @@ def stats(mp):
     elif playerchoice == "":
         return
 
-def heal(mp):
+def healmenu(mp):
     """heal menu function"""
-    print("-----------Healing Menu-----------\n")
-    print(f"Current Health: {mp.health}\n")
-    displayinventory(mp)
-    while True:
-        print("Type a consumable, healing item from your inventory:")
-        print("(or press ENTER to return to game) \n")
-        inputitem = input()
-        if inputitem == "":
+    while mp.health < HEALTH:
+        print("\n------------------------Healing Menu-------------------------\n")
+        mp.display_health()
+        displayinventory(mp)
+        print("Type a consumable, healing item from your inventory to heal.")
+        inputitem = input("(or press ENTER to return to game) \n\n")
+        if inputitem in mp.inventory:
+            healitem(mp, inputitem)
+        elif inputitem == "":
             break
         else:
-            invitems = mp.inventory
-            if inputitem in invitems:
-                if items[inputitem].use == "heal":
-                    if mp.health + float(items[inputitem].points) <= HEALTH:
-                        index_item = invitems.index(inputitem)
-                        mp.health += float(items[inputitem].points)
-                        mp.inventory.pop(index_item)
-                        mp.delay_print(f"""\nYou consumed 1 {inputitem} to increase your health by {items[inputitem].points}.\n""")
-                        print(mp.health)
-                    else:
-                        mp.delay_print(f"\nHealth cannot be greater than {HEALTH}.")
-                else:
-                    mp.delay_print("\nItem found in inventory but cannot be consumed for healing.")
-                    heal(mp)
-            else:
-                mp.delay_print("\nItem not found in inventory.")
-                heal(mp)
+            mp.delay_print("\nItem not found in inventory.")
+            continue
         choice = input("Do you want to heal again? (y/n) \n")
         if choice == "y":
             continue
-        print("----------------------------------\n")
-        break
+        else:
+            break
+    print("-------------------------------------------------------------\n")
+    mp.delay_print(f"Health cannot be greater than {HEALTH}.")
+
+def healitem(mp, item):
+    """determine if inventory item can heal"""
+    if items[item].use == "heal":
+        if mp.health + int(items[item].points) < HEALTH:
+            mp.health += int(items[item].points)
+            mp.delay_print(f"\nYou consumed 1 {item} to increase your health by {items[item].points}.\n")
+            mp.display_health()
+        else:
+            mp.health = HEALTH
+            mp.delay_print(f"\nYou consumed 1 {item} to increased your health to max ({HEALTH}).")
+        index_item = mp.inventory.index(item)
+        mp.inventory.pop(index_item)
+    else:
+        mp.delay_print("\nItem found in inventory but cannot be consumed for healing.")
+        healmenu(mp)
 
 def options(mp):
     """options menu function"""
@@ -199,17 +206,17 @@ def options(mp):
     playerchoice = input("-------> ")
     print("\n")
     match playerchoice:
-        case "i":
+        case "i" | "I":
             playerinventory(mp)
-        case "s":
+        case "s" | "S":
             stats(mp)
-        case "h":
-            heal(mp)
-        case "g":
+        case "h" | "H":
+            healmenu(mp)
+        case "g" | "G":
             mp.game_speed()
-        case "q":
+        case "q" | "Q":
             quitgame(mp)
-        case "r":
+        case "r" | "R":
             rules()
         case _:
             print("Not an option, try again.\n")
@@ -219,8 +226,9 @@ def droppeditem(mp, itemcat):
     and randomly choose an item from defined lists"""
     newitem = random_item(itemcat)
     if randomperc() <= float(items[newitem].rarity):
-        mp.delay_print("The enemy dropped something...")
-        displayitem(newitem)
+        mp.delay_print("The enemy dropped something...\n")
+        display = displayitem(newitem)
+        print(display)
         if newitem in weaponitems:
             olditem = mp.weapon
             playerchoice = input(f"\nDo you want trade your current weapon [{olditem}] for this? (y/n) \n\n")
@@ -229,9 +237,9 @@ def droppeditem(mp, itemcat):
                 mp.delay_print(f"\nYou swapped [{olditem}] for [{newitem}].\n")
                 mp.weapon = newitem
             else:
-                mp.delay_print("\nYou left the item on the ground and walked away.")
+                mp.delay_print("\nYou left the item on the ground and walked away.\n")
         else:
-            print(f"\nYou picked up {newitem}.")
+            print(f"\nYou picked up {newitem}.\n")
             mp.inventory.append(newitem)
 
 def loadgame():
@@ -356,7 +364,7 @@ class Player:
         """player initialization"""
         self.name = name
         self.age = age
-        self.health = float(health)
+        self._health = int(health)
         self.inventory = inventory
         self.weapon = weapon
         self.playerdamage = float(playerdamage)
@@ -365,15 +373,49 @@ class Player:
         self.kills = int(kills)
         self.SPEED = float(SPEED)
 
+    @property
+    def health(self):
+        """health getter"""
+        return self._health
+    
+    @health.setter
+    def health(self, health):
+        """health setter"""
+        if health >= 100:
+            self._health = 100
+        else:
+            self._health = health
+
+    def display_health(self):
+        """display health function"""
+        if self._health % 2 == 0:
+            print("Health: " + ("{}" * int(self._health / 10)), str(self._health), "\n")
+        else:
+            num = self._health - 5
+            print("Health: " + ("{}" * int(num / 10)) + "{", str(self._health), "\n")
+   
     def game_speed(self):
         """game speed function to determine print and sleep times"""
         speedinput = input("\nSet Game Speed: (s)lug | (c)at | (f)alcon \n\n")
+        match speedinput:
+            case "s" | "S":
+                print("\nGame speed set to slug pace.\n")
+                self.SPEED = 0.08
+            case "c" | "C":
+                print("\nGame speed set to cat pace.\n")
+                self.SPEED = 0.04
+            case "f" | "F":
+                print("\nGame speed set to falcon pace.\n")
+                self.SPEED = 0
+            case other:
+                print(f"\n{other} not an option.")
+
         if speedinput == "s":
             print("\nGame speed set to slug pace.\n")
-            self.SPEED = 0.1
+            self.SPEED = 0.04
         elif speedinput == "c":
             print("\nGame speed set to cat pace.\n")
-            self.SPEED = 0.05
+            self.SPEED = 0.02
         elif speedinput == "f":
             print("\nGame speed set to falcon pace.\n")
             self.SPEED = 0
@@ -386,9 +428,8 @@ class Player:
         self.game_speed()
         self.delay_print(f"Welcome to the Game, {self.name.title()}!")
         self.delay_print(f"Your character is {self.age} years old.\n")
-        self.inventory.append("apple")
-        self.inventory.append("key")
-        self.inventory.append("apple")
+        startinv = ["apple", "chips", "bandage", "apple"]
+        self.inventory.extend(startinv)
         self.playerdamage = float(items[self.weapon].points) + fightchance
         time.sleep(self.SPEED * 40)
         rules()
@@ -409,7 +450,7 @@ class Player:
         for char in string:
             print(char, end="", flush=True)
             time.sleep(sp)
-        print("\n")
+        print("\n", end="")
 
 def main():
     """main game function"""
@@ -423,10 +464,15 @@ def main():
     print("  |_______________________________________|\n")
     playerchoice = input()
     print("\n")
-    if playerchoice == "l" or playerchoice == "L":
-        mp = loadgame()
-    elif playerchoice == "n" or playerchoice == "N":
-        mp = newgame()
+    match playerchoice:
+        case "l" | "L":
+            mp = loadgame()
+        case "n" | "N":
+            mp = newgame()
+        case other:
+            print(f"{playerchoice} is not an option.")
+            print("Exiting Game")
+            sys.exit()
     while mp.health > 0:
         mp.playerdamage = float(items[mp.weapon].points) + fightchance
         print("-------------------------------------------------------------\n")
@@ -442,7 +488,7 @@ def main():
             case other:
                 print(f"{other} is not an option.")
         while mp.health <= 0:
-            playagain = input("You lost :( Do you want to play again? (y/n) ")
+            playagain = input("You didn't make it this time...Do you want to play again? (y/n) ")
             if playagain == "y":
                 mp.delay_print("\nLet's play again!\n")
                 main()

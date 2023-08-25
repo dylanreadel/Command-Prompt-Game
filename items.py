@@ -1,6 +1,7 @@
 """import csv library"""
 import csv
 import random
+import os
 
 class Item:
     """defining instantiation of Item class"""
@@ -9,6 +10,9 @@ class Item:
         self.item_id = item_id
     def __repr__(self):
         return self.item_id
+
+# set directory to current directory
+os.chdir('C:/Users/dylan/Documents/Code Projects/VSCode Projects/CommandPromptGame/Command-Prompt-Game')
 
 # read in item csv as a list
 with open('items.csv', encoding="UTF-8") as itemdata:
@@ -42,15 +46,18 @@ def random_item(category):
 # rarity labels
 def rarity_label(item):
     """defining rarity label function"""
-    match items[item].rarity:
-        case "80":
-            return "BASIC"
-        case "60":
-            return "EPIC"
-        case "40":
-            return "ULTRA"
-        case "20":
-            return "LEGENDARY"
+    rarityint = int(items[item].rarity)
+    if rarityint > 80:
+        rarity = "POOR"
+    elif rarityint > 60:
+        rarity = "DECENT"
+    elif rarityint > 40:
+        rarity = "EPIC"
+    elif rarityint > 20:
+        rarity = "FABLED"
+    elif rarityint > 0:
+        rarity = "MYTHICAL"
+    return rarity
 
 def displayitem(item):
     """item display function"""
@@ -58,6 +65,9 @@ def displayitem(item):
     cat = items[item].category
     use = items[item].use
     points = items[item].points
-    print(f"[ {item} ({rarity}) ] : A {cat} item used to {use} {points} points.")
+    n = 40 - (len(item) + 12)
+    m = int((10 - len(rarity)) / 2)
+    return f" {item}" + (" " * n) + "[" + (" " * m) + f"{rarity}" + (" " * m) + f"] : A {cat} item used to {use} {points} points."
 
-displayitem("sword")
+# TEST
+# displayitem("apple")

@@ -1,16 +1,19 @@
 itemname,category,use,points,rarity
-fists,weapon,damage,0,40
-dagger,weapon,damage,10,40
-sword,weapon,damage,25,40
-granola bar,consumable,energize,15,40
-chips,consumable,energize,10,40
-canned fruit,consumable,energize,25,40
-berries,consumable,energize,30,40
-apple,consumable,heal,5,40
-medicine,consumable,heal,50,40
-bandage,consumable,heal,15,40
-adrenaline,consumable,heal,35,40
-painkillers,consumable,heal,25,40
-key,token,progress,50,40
-katana,weapon,damage,30,40
-Book of Knowledge,token,progress,25,40
+fists,weapon,damage,0,100
+dagger,weapon,damage,10,90
+sword,weapon,damage,25,80
+katana,weapon,damage,30,60
+weaponplaceholder,weapon,damage,45,42
+weaponplaceholder,weapon,damage,50,25
+weaponplaceholder,weapon,damage,60,5
+granola bar,consumable,energize,20,75
+chips,consumable,energize,10,90
+canned fruit,consumable,energize,25,68
+berries,consumable,energize,30,62
+apple,consumable,heal,5,95
+cosmic healing powder,consumable,heal,50,15
+bandage,consumable,heal,10,85
+adrenaline,consumable,heal,35,42
+painkillers,consumable,heal,25,62
+key,token,progress,50,41
+Book of Knowledge,token,progress,100,5
