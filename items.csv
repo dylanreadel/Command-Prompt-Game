@@ -1,5 +1,5 @@
 itemname,category,use,points,rarity
-fists,weapon,damage,0,100
+fists,misc,damage,0,100
 dagger,weapon,damage,10,90
 sword,weapon,damage,25,80
 katana,weapon,damage,30,60
