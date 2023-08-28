@@ -1,7 +1,14 @@
 """import standard libraries"""
 import sys
+import os
+
+# import other functions, classes, constants
 from items import items
-from player import loadgame, newgame, walk, fight, options, fightchance
+from player import fightchance
+from loadgame import loadgame, newgame
+
+# set directory to current directory
+os.chdir('C:/Users/dylan/Documents/Code Projects/VSCode Projects/CommandPromptGame/Command-Prompt-Game')
 
 def game_start():
     """game start sequence"""
@@ -17,38 +24,37 @@ def game_start():
     print("\n")
     match playerchoice:
         case "l" | "L":
-            mp = loadgame()
+            player = loadgame()
         case "n" | "N":
-            mp = newgame()
+            player = newgame()
         case other:
             print(f"{other} is not an option.")
             print("Exiting Game")
             sys.exit()
-    return mp
+    return player
 
-def main_game_loop():
+def main_game_loop(player):
     """main game loop"""
-    mp = game_start()
-    while mp.health > 0:
-        mp.playerdamage = float(items[mp.weapon].points) + fightchance
+    while player.health > 0:
+        player.playerdamage = float(items[player.weapon].points) + fightchance
         print("-------------------------------------------------------------\n")
-        if mp.health < 50:
-            mp.delay_print("Reminder! Heal in the options menu.\n")
-            mp.display_health()
+        if player.health < 50:
+            player.delay_print("Reminder! Heal in the options menu.\n")
+            player.display_health()
         playerchoice = input("Choose your option: [ (w)alk, (f)ight, or (o)ptions ] : ")
         print("\n")
         match playerchoice:
             case "w" | "W":
-                walk(mp)
+                player.walk()
             case "f" | "F":
-                fight(mp)
+                player.fight()
             case "o" | "O":
-                options(mp)
+                player.options()
             case other:
                 print(f"{other} is not an option.")
-    return mp
+    return player
 
-def game_over(mp):
+def game_over(player):
     """game over sequence"""
     i = 0
     while i < 1:
@@ -56,19 +62,20 @@ def game_over(mp):
         print("\n")
         match playagain:
             case "y" | "Y":
-                mp.delay_print("\nLet's play again!\n")
+                player.delay_print("\nLet's play again!\n")
                 i += 1
                 main()
             case "n" | "N":
                 i += 1
                 sys.exit()
             case other:
-                mp.delay_print(f"{other} is not an option.\n")
+                player.delay_print(f"{other} is not an option.\n")
 
 def main():
     """main function"""
-    mp = main_game_loop()
-    game_over(mp)
+    player = game_start()
+    main_game_loop(player)
+    game_over(player)
 
 if __name__ == "__main__":
     main()
