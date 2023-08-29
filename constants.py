@@ -12,6 +12,9 @@ def randomperc():
 # starting player health
 HEALTH = 100
 
+# starting player energy
+ENERGY = 100
+
 # starting inventory size
 INVENTORY_SIZE = 10
 

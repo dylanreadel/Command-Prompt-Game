@@ -4,7 +4,7 @@ import os
 
 # import other functions, classes, constants
 from items import items
-from player import fightchance
+from constants import fightchance
 from loadgame import loadgame, newgame
 
 # set directory to current directory
